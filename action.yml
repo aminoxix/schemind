@@ -1,0 +1,49 @@
+name: schemind
+description: Detect API response shape drift in CI and comment on the PR that caused it.
+author: aminos
+branding:
+  icon: activity
+  color: purple
+
+inputs:
+  base-url:
+    description: Target origin to scan (e.g. https://staging.api.com)
+    required: true
+  routes:
+    description: Path to routes.json
+    required: false
+    default: routes.json
+  fail-on:
+    description: Minimum severity that fails the build (info | warn | breaking)
+    required: false
+    default: breaking
+  snapshots:
+    description: Baseline directory (commit this to git to persist baselines)
+    required: false
+    default: .schemind/snapshots
+  comment:
+    description: Post/update a PR comment with the drift table
+    required: false
+    default: 'true'
+  version:
+    description: schemind version (npm dist-tag or version)
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Run schemind CI gate
+      shell: bash
+      run: |
+        npx --yes -p "schemind@${{ inputs.version }}" schm ci \
+          --base-url "${{ inputs.base-url }}" \
+          --routes "${{ inputs.routes }}" \
+          --fail-on "${{ inputs.fail-on }}" \
+          --snapshots "${{ inputs.snapshots }}" \
+          ${{ inputs.comment == 'true' && '--comment' || '' }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

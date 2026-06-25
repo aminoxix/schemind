@@ -1,0 +1,23 @@
+{
+  "name": "schemind-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "schemind — language-agnostic API response shape intelligence layer",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:run": "pnpm -r test:run",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "author": "Anshumaan Kumar Prasad (aminos) <aminoxix@duck.com>",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4"
+  }
+}

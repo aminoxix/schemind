@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .input {
+    @apply border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400;
+  }
+}
