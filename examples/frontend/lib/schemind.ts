@@ -5,7 +5,7 @@
 // One in-memory engine instruments every API call through a wrapped `fetch`.
 // Observations are broadcast to subscribers (the DriftPanel) so detected drift
 // shows up live in the UI — without any backend changes.
-import { type ObserveResult, createSchemind, createSchemindFetch } from 'schemind'
+import { type ObserveResult, createSchemind, createSchemindFetch } from '@aminoxix/schemind'
 
 const engine = createSchemind()
 
@@ -26,5 +26,5 @@ export const schemindFetch = createSchemindFetch({
   },
 })
 
-export type { ObserveResult } from 'schemind'
-export type { DriftReport } from 'schemind'
+export type { ObserveResult } from '@aminoxix/schemind'
+export type { DriftReport } from '@aminoxix/schemind'

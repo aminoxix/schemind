@@ -1,6 +1,6 @@
 {
   "name": "@aminoxix/schemind",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Language-agnostic API response shape intelligence — detects when your API's shape silently changes.",
   "type": "module",
   "license": "MIT",

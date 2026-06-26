@@ -17,6 +17,9 @@
   },
   "author": "Anshumaan Kumar Prasad (aminos) <aminoxix@duck.com>",
   "license": "UNLICENSED",
+  "dependencies": {
+    "@aminoxix/schemind": "workspace:*"
+  },
   "devDependencies": {
     "@biomejs/biome": "1.9.4"
   }

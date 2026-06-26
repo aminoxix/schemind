@@ -484,7 +484,7 @@ async function loadAllSnapshots(store: SnapshotStore): Promise<CodegenSnapshot[]
 }
 
 async function runInit(): Promise<void> {
-  const config = `import { defineConfig } from 'schemind'
+  const config = `import { defineConfig } from '@aminoxix/schemind'
 
 export default defineConfig({
   baseUrl: 'http://localhost:8080',
