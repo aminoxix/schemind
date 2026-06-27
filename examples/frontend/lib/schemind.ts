@@ -27,4 +27,4 @@ export const schemindFetch = createSchemindFetch({
 })
 
 export type { ObserveResult } from '@aminoxix/schemind'
-export type { DriftReport } from '@aminoxix/schemind'
+export type { DriftReport, DriftChange } from '@aminoxix/schemind'

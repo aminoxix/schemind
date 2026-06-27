@@ -1,6 +1,7 @@
 'use client'
 
-import type { DriftReport } from '@/lib/schemind'
+import { Button } from '@/components/ui/button'
+import type { DriftChange, DriftReport } from '@/lib/schemind'
 import { Activity } from 'lucide-react'
 
 export interface DriftEntry {
@@ -21,7 +22,7 @@ export function DriftPanel({ entries, onClear }: { entries: DriftEntry[]; onClea
   return (
     <aside
       data-testid="drift-panel"
-      className="bg-white rounded-xl border border-zinc-200 p-4 flex flex-col gap-3 h-fit sticky top-24"
+      className="sticky top-24 flex h-fit flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -29,9 +30,9 @@ export function DriftPanel({ entries, onClear }: { entries: DriftEntry[]; onClea
           <h2 className="font-semibold text-sm text-zinc-900">schemind</h2>
         </div>
         {entries.length > 0 && (
-          <button onClick={onClear} className="text-xs text-zinc-400 hover:text-zinc-700">
+          <Button variant="ghost" size="sm" onClick={onClear}>
             Clear
-          </button>
+          </Button>
         )}
       </div>
 
@@ -46,18 +47,18 @@ export function DriftPanel({ entries, onClear }: { entries: DriftEntry[]; onClea
               key={entry.id}
               data-testid="drift-entry"
               data-severity={entry.report?.severity ?? (entry.created ? 'baseline' : 'none')}
-              className="border border-zinc-100 rounded-lg p-2.5 text-xs"
+              className="rounded-lg border border-zinc-100 p-2.5 text-xs"
             >
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <code className="text-zinc-700 truncate">{entry.endpoint}</code>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <code className="truncate text-zinc-700">{entry.endpoint}</code>
                 {entry.created ? (
-                  <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
+                  <span className="shrink-0 rounded-full bg-zinc-100 px-1.5 py-0.5 text-zinc-500">
                     baseline
                   </span>
                 ) : (
                   <span
                     data-testid="drift-severity"
-                    className={`shrink-0 px-1.5 py-0.5 rounded-full uppercase tracking-wide ${
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 uppercase tracking-wide ${
                       SEVERITY_STYLE[entry.report?.severity ?? 'info']
                     }`}
                   >
@@ -67,7 +68,7 @@ export function DriftPanel({ entries, onClear }: { entries: DriftEntry[]; onClea
               </div>
               {entry.report && entry.report.changes.length > 0 && (
                 <ul className="flex flex-col gap-0.5 text-zinc-500">
-                  {entry.report.changes.map((change, i) => (
+                  {entry.report.changes.map((change: DriftChange, i: number) => (
                     <li key={i} data-testid="drift-change">
                       <span className="text-zinc-800">{change.path || '(root)'}</span> ·{' '}
                       {change.type}

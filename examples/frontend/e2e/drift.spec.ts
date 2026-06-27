@@ -17,9 +17,10 @@ async function waitForBaseline(page: Page) {
   await expect(page.locator('[data-testid="drift-entry"]').first()).toBeVisible()
 }
 
-/** Switch the drift selector and wait for the backend toggle + refetch to settle. */
+/** Switch the drift selector (a Radix Select: open the trigger, click the item). */
 async function setDrift(page: Page, mode: string) {
-  await page.getByTestId('drift-mode').selectOption(mode)
+  await page.getByTestId('drift-mode').click()
+  await page.getByTestId(`drift-mode-${mode}`).click()
 }
 
 test.describe
