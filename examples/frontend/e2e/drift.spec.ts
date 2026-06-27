@@ -36,6 +36,14 @@ test.describe
       await expect(
         page.locator('[data-testid="drift-entry"][data-severity="baseline"]').first(),
       ).toBeVisible()
+
+      // The same call is observed by both integrations, each tagged by source.
+      await expect(
+        page.locator('[data-testid="drift-source"][data-source="fetch"]').first(),
+      ).toBeVisible()
+      await expect(
+        page.locator('[data-testid="drift-source"][data-source="tanstack"]').first(),
+      ).toBeVisible()
     })
 
     test('flags a BREAKING change when the backend renames a field', async ({ page }) => {

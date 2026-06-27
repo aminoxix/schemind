@@ -237,6 +237,76 @@ schm dashboard
 
 ---
 
+## TanStack Query integration
+
+schemind watches every query and mutation automatically — no per-query changes needed.
+
+### auto-observe all queries (recommended)
+
+```ts
+import { createSchemindQueryClient } from "@aminoxix/schemind/tanstack";
+
+const queryClient = createSchemindQueryClient({
+  onObserve: ({ endpoint, report }) => {
+    if (report?.severity === "breaking") console.error("drift!", endpoint, report);
+  },
+});
+
+// wrap your app as usual
+<QueryClientProvider client={queryClient}>...</QueryClientProvider>
+```
+
+every `useQuery` and `useMutation` in your app is observed — zero other changes.
+
+### per-query hooks
+
+```ts
+import { useSchemindQuery, useSchemindMutation, createSchemind } from "@aminoxix/schemind/tanstack";
+
+const engine = createSchemind();
+
+// drop-in for useQuery
+const { data } = useSchemindQuery({
+  queryKey: ["books"],
+  queryFn: () => fetch("/api/books").then((r) => r.json()),
+  endpoint: "GET /api/books",
+  engine,
+});
+
+// drop-in for useMutation — observes both request and response shape
+const createBook = useSchemindMutation({
+  endpoint: "POST /api/books",
+  engine,
+  method: "POST",
+  mutationFn: (book: BookInput) =>
+    fetch("/api/books", { method: "POST", body: JSON.stringify(book) }).then((r) => r.json()),
+});
+```
+
+### low-level wrapper
+
+```ts
+import { wrapQueryFn } from "@aminoxix/schemind/tanstack";
+
+const { data } = useQuery({
+  queryKey: ["books"],
+  queryFn: wrapQueryFn("GET /api/books", fetchBooks, { engine }),
+});
+```
+
+### options & endpoint keys
+
+Every entry point accepts `onObserve` and `onError` callbacks, plus an optional
+`statusCode` (default `200`) for the observation record. Prefer passing an
+explicit `endpoint` (`"VERB /path"`): without it the endpoint is derived
+best-effort from the query/mutation key, which can't always recover a clean
+route and drops object key segments. The per-query hooks no-op (with a dev-mode
+warning) when `engine` is omitted.
+
+requires `@tanstack/react-query >= 5`.
+
+---
+
 ## other storage options
 
 | driver | import | use case |

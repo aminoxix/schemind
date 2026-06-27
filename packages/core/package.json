@@ -1,6 +1,6 @@
 {
   "name": "@aminoxix/schemind",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Language-agnostic API response shape intelligence — detects when your API's shape silently changes.",
   "type": "module",
   "license": "MIT",
@@ -42,6 +42,10 @@
       "types": "./dist/hono.d.ts",
       "import": "./dist/hono.js"
     },
+    "./tanstack": {
+      "types": "./dist/tanstack.d.ts",
+      "import": "./dist/tanstack.js"
+    },
     "./package.json": "./package.json"
   },
   "files": ["dist", "README.md"],
@@ -55,15 +59,20 @@
     "prepublishOnly": "pnpm typecheck && pnpm build"
   },
   "devDependencies": {
+    "@tanstack/react-query": "^5.101.1",
     "@types/node": "^22.10.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
   "peerDependencies": {
+    "@tanstack/react-query": ">=5.0.0",
     "typescript": ">=5.0.0"
   },
   "peerDependenciesMeta": {
+    "@tanstack/react-query": {
+      "optional": true
+    },
     "typescript": {
       "optional": true
     }

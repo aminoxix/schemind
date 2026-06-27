@@ -8,6 +8,7 @@ export default defineConfig({
     'src/express.ts',
     'src/next.ts',
     'src/hono.ts',
+    'src/tanstack.ts',
   ],
   format: ['esm'],
   target: 'node18',

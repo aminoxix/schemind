@@ -163,8 +163,8 @@ pnpm add ioredis   # your dep, not schemind's
 
 ```js
 // schemind.config.mjs
-import { defineConfig } from 'schemind'
-import { RedisStorageDriver } from 'schemind/node'
+import { defineConfig } from '@aminoxix/schemind'
+import { RedisStorageDriver } from '@aminoxix/schemind/node'
 import Redis from 'ioredis'
 
 export default defineConfig({
@@ -185,8 +185,8 @@ pnpm add @aws-sdk/client-s3
 
 ```js
 // schemind.config.mjs
-import { defineConfig } from 'schemind'
-import { S3StorageDriver } from 'schemind/node'
+import { defineConfig } from '@aminoxix/schemind'
+import { S3StorageDriver } from '@aminoxix/schemind/node'
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
 
 const s3 = new S3Client({})
@@ -215,7 +215,7 @@ export default defineConfig({
 extend `JsonStorageDriver` and implement four raw-text methods — you get canonical JSON serialization and read-time validation for free (corrupt or hand-edited records throw `SchemindValidationError` instead of poisoning the diff engine):
 
 ```ts
-import { JsonStorageDriver, type RawRecord } from 'schemind'
+import { JsonStorageDriver, type RawRecord } from '@aminoxix/schemind'
 
 class MyKvDriver extends JsonStorageDriver {
   constructor(private kv: MyClient, private prefix = 'schemind:') { super() }

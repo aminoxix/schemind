@@ -44,7 +44,7 @@ export default function HomePage() {
 
   // Subscribe to every schemind observation and surface drift in the panel.
   useEffect(() => {
-    return onObserve((result) => {
+    return onObserve((result, source) => {
       // Ignore "no change" observations; show baselines and real drift.
       if (!result.created && (result.report?.changes.length ?? 0) === 0) return
       setEntries((prev) =>
@@ -54,6 +54,7 @@ export default function HomePage() {
             endpoint: result.endpoint,
             report: result.report,
             created: result.created,
+            source,
             at: new Date().toISOString(),
           },
           ...prev,

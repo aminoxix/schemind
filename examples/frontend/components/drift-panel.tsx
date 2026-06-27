@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import type { DriftChange, DriftReport } from '@/lib/schemind'
+import type { DriftChange, DriftReport, ObserveSource } from '@/lib/schemind'
 import { Activity } from 'lucide-react'
 
 export interface DriftEntry {
@@ -9,6 +9,7 @@ export interface DriftEntry {
   endpoint: string
   report: DriftReport | null
   created: boolean
+  source: ObserveSource
   at: string
 }
 
@@ -16,6 +17,11 @@ const SEVERITY_STYLE: Record<string, string> = {
   info: 'bg-sky-100 text-sky-700',
   warn: 'bg-amber-100 text-amber-700',
   breaking: 'bg-red-100 text-red-700',
+}
+
+const SOURCE_STYLE: Record<ObserveSource, string> = {
+  fetch: 'bg-zinc-100 text-zinc-600',
+  tanstack: 'bg-indigo-100 text-indigo-700',
 }
 
 export function DriftPanel({ entries, onClear }: { entries: DriftEntry[]; onClear: () => void }) {
@@ -50,7 +56,16 @@ export function DriftPanel({ entries, onClear }: { entries: DriftEntry[]; onClea
               className="rounded-lg border border-zinc-100 p-2.5 text-xs"
             >
               <div className="mb-1 flex items-center justify-between gap-2">
-                <code className="truncate text-zinc-700">{entry.endpoint}</code>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <span
+                    data-testid="drift-source"
+                    data-source={entry.source}
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 font-medium text-[10px] uppercase tracking-wide ${SOURCE_STYLE[entry.source] ?? ''}`}
+                  >
+                    {entry.source}
+                  </span>
+                  <code className="truncate text-zinc-700">{entry.endpoint}</code>
+                </div>
                 {entry.created ? (
                   <span className="shrink-0 rounded-full bg-zinc-100 px-1.5 py-0.5 text-zinc-500">
                     baseline
