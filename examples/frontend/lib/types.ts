@@ -37,7 +37,7 @@ export const driftModeSchema = z.enum(['none', 'breaking', 'warn', 'info'])
 export type DriftMode = z.infer<typeof driftModeSchema>
 export const driftResponseSchema = z.object({ drift: driftModeSchema })
 
-export const backendTargetSchema = z.enum(['go', 'java'])
+export const backendTargetSchema = z.enum(['go', 'java', 'py'])
 export type BackendTarget = z.infer<typeof backendTargetSchema>
 
 /** Strict input schema for the create/update form (TanStack Form + Zod). */

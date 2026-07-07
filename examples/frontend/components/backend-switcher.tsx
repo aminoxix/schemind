@@ -12,6 +12,7 @@ import type { BackendTarget } from '@/lib/types'
 const OPTIONS: { value: BackendTarget; label: string }[] = [
   { value: 'go', label: 'Go · :8080' },
   { value: 'java', label: 'Java · :8081' },
+  { value: 'py', label: 'Python · :8082' },
 ]
 
 export function BackendSwitcher({

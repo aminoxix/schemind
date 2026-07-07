@@ -3,8 +3,9 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * E2E config for the schemind demo.
  *
- * Boots both servers automatically:
+ * Boots all servers automatically:
  *  - the Go backend (`go run .`) on :8080
+ *  - the Python backend (`python3 main.py`) on :8082
  *  - the Next.js dev server on :3000
  *
  * Run with: `pnpm e2e` (from examples/frontend).
@@ -28,6 +29,13 @@ export default defineConfig({
       command: 'go run .',
       cwd: '../backend-go',
       url: 'http://localhost:8080/api/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    {
+      command: 'python3 main.py',
+      cwd: '../backend-py',
+      url: 'http://localhost:8082/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },

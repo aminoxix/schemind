@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	schemind "github.com/aminoxix/schemind/adapters/schemind-go"
 )
 
 // ---------------------------------------------------------------------------
@@ -45,6 +47,78 @@ const (
 	driftInfo     = "info"     // add a new `genre` field (additive)
 )
 
+// ---------------------------------------------------------------------------
+// schemind adapter protocol — per-drift-mode schema hashes.
+//
+// Each drift mode serializes a different *shape*, so each mode is a distinct
+// schema version with its own hash (computed once at startup via the real
+// schemind-go adapter). Within a mode the hash is stable → the core's
+// trustAdapterHash fast-path can skip extraction; flipping the mode changes
+// the hash → the core re-extracts and catches the drift. A single static hash
+// here would be a footgun (unchanged hash + mutated shape = missed drift).
+// ---------------------------------------------------------------------------
+
+type bookWireAuthor struct {
+	Name    string `json:"name"`
+	Country string `json:"country"`
+}
+
+// The canonical serialized book (drift mode "none").
+type bookWireNone struct {
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	Author      bookWireAuthor `json:"author"`
+	Tags        []string       `json:"tags"`
+	Rating      float64        `json:"rating"`
+	PublishedAt *string        `json:"publishedAt"`
+	CreatedAt   string         `json:"createdAt"`
+}
+
+// "breaking": author renamed to authorInfo.
+type bookWireBreaking struct {
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	AuthorInfo  bookWireAuthor `json:"authorInfo"`
+	Tags        []string       `json:"tags"`
+	Rating      float64        `json:"rating"`
+	PublishedAt *string        `json:"publishedAt"`
+	CreatedAt   string         `json:"createdAt"`
+}
+
+// "warn": rating becomes nullable.
+type bookWireWarn struct {
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	Author      bookWireAuthor `json:"author"`
+	Tags        []string       `json:"tags"`
+	Rating      *float64       `json:"rating"`
+	PublishedAt *string        `json:"publishedAt"`
+	CreatedAt   string         `json:"createdAt"`
+}
+
+// "info": additive genre field.
+type bookWireInfo struct {
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	Author      bookWireAuthor `json:"author"`
+	Tags        []string       `json:"tags"`
+	Rating      float64        `json:"rating"`
+	PublishedAt *string        `json:"publishedAt"`
+	CreatedAt   string         `json:"createdAt"`
+	Genre       string         `json:"genre"`
+}
+
+var schemaHashByMode = map[string]string{
+	driftNone:     schemind.Hash(bookWireNone{}),
+	driftInfo:     schemind.Hash(bookWireInfo{}),
+	driftWarn:     schemind.Hash(bookWireWarn{}),
+	driftBreaking: schemind.Hash(bookWireBreaking{}),
+}
+
+var schemaVersionByMode = map[string]int{
+	driftNone: 1, driftInfo: 2, driftWarn: 3, driftBreaking: 4,
+}
+
 type store struct {
 	mu    sync.RWMutex
 	books map[string]*Book
@@ -67,6 +141,12 @@ func newStore() *store {
 		s.order = append(s.order, b.ID)
 	}
 	return s
+}
+
+// stampSchema writes the schemind adapter headers for the current drift mode.
+// Callers must already hold the store lock (read or write).
+func (s *store) stampSchema(w http.ResponseWriter) {
+	schemind.SetHeaders(w.Header(), schemaHashByMode[s.drift], schemaVersionByMode[s.drift])
 }
 
 // serialize renders a book into a map whose *shape* depends on the drift mode.
@@ -99,6 +179,7 @@ func (s *store) serialize(b *Book) map[string]any {
 func (s *store) list(w http.ResponseWriter, _ *http.Request) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	s.stampSchema(w)
 	data := make([]map[string]any, 0, len(s.order))
 	for _, id := range s.order {
 		data = append(data, s.serialize(s.books[id]))
@@ -114,14 +195,15 @@ func (s *store) get(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]any{"error": "not found"})
 		return
 	}
+	s.stampSchema(w)
 	writeJSON(w, http.StatusOK, map[string]any{"data": s.serialize(b)})
 }
 
 type bookInput struct {
-	Title   string   `json:"title"`
-	Author  Author   `json:"author"`
-	Tags    []string `json:"tags"`
-	Rating  float64  `json:"rating"`
+	Title  string   `json:"title"`
+	Author Author   `json:"author"`
+	Tags   []string `json:"tags"`
+	Rating float64  `json:"rating"`
 }
 
 func (s *store) create(w http.ResponseWriter, r *http.Request) {
@@ -135,6 +217,7 @@ func (s *store) create(w http.ResponseWriter, r *http.Request) {
 	b := &Book{ID: newID(), Title: in.Title, Author: in.Author, Tags: orEmpty(in.Tags), Rating: in.Rating, CreatedAt: time.Now().UTC().Format(time.RFC3339)}
 	s.books[b.ID] = b
 	s.order = append(s.order, b.ID)
+	s.stampSchema(w)
 	writeJSON(w, http.StatusCreated, map[string]any{"data": s.serialize(b)})
 }
 
@@ -152,6 +235,7 @@ func (s *store) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b.Title, b.Author, b.Tags, b.Rating = in.Title, in.Author, orEmpty(in.Tags), in.Rating
+	s.stampSchema(w)
 	writeJSON(w, http.StatusOK, map[string]any{"data": s.serialize(b)})
 }
 
@@ -227,6 +311,7 @@ func cors(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Schemind-Schema-Hash, X-Schemind-Schema-Version")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
