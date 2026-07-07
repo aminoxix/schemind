@@ -56,8 +56,15 @@ func canonical(t reflect.Type, seen map[reflect.Type]bool) string {
 	if t == nil {
 		return "nil"
 	}
-	for t.Kind() == reflect.Ptr {
-		t = t.Elem()
+	// Pointers mark nullability — `*T` serializes as `T | null`, which is a
+	// different wire shape than `T` (a `became_nullable` drift). The hash must
+	// change with it, so wrap rather than silently dereference. Multiple levels
+	// of indirection collapse to one wrap: `**T` and `*T` share a wire shape.
+	if t.Kind() == reflect.Ptr {
+		for t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		return "(null|" + canonical(t, seen) + ")"
 	}
 	switch t.Kind() {
 	case reflect.Struct:
