@@ -21,6 +21,15 @@ coverage/
 # schemind runtime artifacts
 .schemind/
 
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# compiled example binaries
+examples/backend-go/backend-go
+
 # editor / os
 .DS_Store
 .idea/
