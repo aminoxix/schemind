@@ -265,8 +265,17 @@ class Handler(BaseHTTPRequestHandler):
             "Access-Control-Expose-Headers", f"{HEADER_HASH}, {HEADER_VERSION}"
         )
 
+    # Cap request bodies (mirrors the core's readJson cap) — a hostile
+    # Content-Length must not let a client exhaust memory.
+    MAX_BODY_BYTES = 1 << 20  # 1 MiB
+
     def _read_body(self) -> Optional[dict[str, Any]]:
-        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return None
+        if length < 0 or length > self.MAX_BODY_BYTES:
+            return None
         raw = self.rfile.read(length) if length else b""
         try:
             parsed = json.loads(raw or b"{}")

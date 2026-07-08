@@ -19,6 +19,10 @@ toolchain beyond `go`; the Java one needs JDK 17+ and Maven (see
 the demo for the in-repo [`schemind-py`](../packages/py) port
 (`python3 watch.py`).
 
+> **Note:** these are demo servers — they bind all interfaces, allow `*` CORS,
+> and expose a runtime drift toggle by design. Run them on trusted networks
+> only; don't deploy them.
+
 ## Run it
 
 **1. Backend** (`:8080`, stdlib only, no `go mod tidy` / network needed):

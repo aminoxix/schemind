@@ -206,9 +206,13 @@ type bookInput struct {
 	Rating float64  `json:"rating"`
 }
 
+// maxBodyBytes caps request bodies (mirrors the core's readJson cap) so a
+// hostile Content-Length can't exhaust memory.
+const maxBodyBytes = 1 << 20 // 1 MiB
+
 func (s *store) create(w http.ResponseWriter, r *http.Request) {
 	var in bookInput
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes)).Decode(&in); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
@@ -223,7 +227,7 @@ func (s *store) create(w http.ResponseWriter, r *http.Request) {
 
 func (s *store) update(w http.ResponseWriter, r *http.Request) {
 	var in bookInput
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes)).Decode(&in); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
