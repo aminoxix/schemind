@@ -1,14 +1,17 @@
 import { type Page, expect, test } from '@playwright/test'
 
 const GO = 'http://localhost:8080'
+const PY = 'http://localhost:8082'
 
-/** Reset the backend to its canonical (no-drift) shape before each test. */
+/** Reset the backends to their canonical (no-drift) shape before each test. */
 test.beforeEach(async ({ request }) => {
   await request.post(`${GO}/api/_drift?mode=none`)
+  await request.post(`${PY}/api/_drift?mode=none`)
 })
 
 test.afterAll(async ({ request }) => {
   await request.post(`${GO}/api/_drift?mode=none`)
+  await request.post(`${PY}/api/_drift?mode=none`)
 })
 
 async function waitForBaseline(page: Page) {
@@ -100,5 +103,26 @@ test.describe
 
       await expect(page.getByTestId('book-form')).toBeHidden()
       await expect(page.getByText(title)).toBeVisible()
+    })
+
+    test('switches to the Python backend and detects its drift', async ({ page }) => {
+      await page.goto('/')
+      await waitForBaseline(page)
+
+      // Switch the backend selector (Radix Select) to Python.
+      await page.getByTestId('backend-select').click()
+      await page.getByTestId('backend-py').click()
+
+      // The Python backend seeds its own books and gets its own baseline.
+      await waitForBaseline(page)
+      await expect(page.getByText('Fluent Python')).toBeVisible()
+
+      // Drift detection works identically against the Python backend.
+      await setDrift(page, 'breaking')
+      const breaking = page.locator('[data-testid="drift-entry"][data-severity="breaking"]').first()
+      await expect(breaking).toBeVisible()
+      await expect(
+        breaking.getByTestId('drift-change').filter({ hasText: 'author' }).first(),
+      ).toBeVisible()
     })
   })

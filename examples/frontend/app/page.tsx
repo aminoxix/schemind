@@ -27,6 +27,12 @@ const DRIFT_MODES: { value: DriftMode; label: string }[] = [
   { value: 'breaking', label: 'Breaking — rename' },
 ]
 
+const BACKEND_LABEL: Record<BackendTarget, string> = {
+  go: 'Go (:8080)',
+  java: 'Java (:8081)',
+  py: 'Python (:8082)',
+}
+
 export default function HomePage() {
   const [backend, setBackend] = useState<BackendTarget>('go')
   const [modal, setModal] = useState<Modal>(null)
@@ -153,8 +159,7 @@ export default function HomePage() {
               data-testid="error"
               className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm"
             >
-              {books.error.message} — is the {backend === 'go' ? 'Go (:8080)' : 'Java (:8081)'}{' '}
-              backend running?
+              {books.error.message} — is the {BACKEND_LABEL[backend]} backend running?
             </div>
           )}
 

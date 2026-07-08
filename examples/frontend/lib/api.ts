@@ -14,6 +14,7 @@ import {
 const BASE_URL: Record<BackendTarget, string> = {
   go: process.env.NEXT_PUBLIC_GO_URL ?? 'http://localhost:8080',
   java: process.env.NEXT_PUBLIC_JAVA_URL ?? 'http://localhost:8081',
+  py: process.env.NEXT_PUBLIC_PY_URL ?? 'http://localhost:8082',
 }
 
 /* ------------------------------- typed errors ----------------------------- */

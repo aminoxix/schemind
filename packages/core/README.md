@@ -328,7 +328,7 @@ install a satellite on your backend to unlock the hash fast-path — schemind sk
 |---|---|---|
 | Go (net/http) | `schemind-go` | ✅ available |
 | Java / Spring Boot | `schemind-java` | 🔜 coming soon |
-| Python (FastAPI / Django) | `schemind-py` | 🔜 coming soon |
+| Python (FastAPI / Django) | `schemind-py` | ✅ available |
 
 ---
 

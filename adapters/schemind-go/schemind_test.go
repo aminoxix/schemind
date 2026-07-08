@@ -33,10 +33,10 @@ func TestHashIsStable8Hex(t *testing.T) {
 
 func TestHashChangesOnRename(t *testing.T) {
 	type bookRenamed struct {
-		ID         string `json:"id"`
-		Title      string `json:"title"`
-		Author     author `json:"authorInfo"` // renamed in JSON
-		Tags       []string
+		ID     string `json:"id"`
+		Title  string `json:"title"`
+		Author author `json:"authorInfo"` // renamed in JSON
+		Tags   []string
 		Rating float64 `json:"rating"`
 	}
 	if Hash(book{}) == Hash(bookRenamed{}) {
@@ -69,5 +69,17 @@ func TestMiddlewareSetsHeaders(t *testing.T) {
 	}
 	if got := rec.Header().Get(HeaderVersion); got != "3" {
 		t.Fatalf("version header = %q, want 3", got)
+	}
+}
+
+func TestHashChangesOnNullability(t *testing.T) {
+	type required struct {
+		Rating float64 `json:"rating"`
+	}
+	type nullable struct {
+		Rating *float64 `json:"rating"`
+	}
+	if Hash(required{}) == Hash(nullable{}) {
+		t.Fatal("hash should change when a field becomes nullable (*T vs T)")
 	}
 }

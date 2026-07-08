@@ -32,3 +32,33 @@ jobs:
 
       - name: Test
         run: pnpm test:run
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test schemind-py (core + adapter)
+        working-directory: packages/py
+        run: PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+  go-adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Test schemind-go adapter
+        working-directory: adapters/schemind-go
+        run: go test ./...
+
+      - name: Build Go example backend
+        working-directory: examples/backend-go
+        run: go build ./...

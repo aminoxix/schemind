@@ -1,0 +1,32 @@
+[build-system]
+# >=1.26 for PEP 639 bare-string `license = "MIT"` (metadata 2.4).
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "schemind-py"
+version = "0.1.0"
+description = "Language-agnostic API response shape intelligence — detects when your API's shape silently changes. Python port of @aminoxix/schemind."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "aminoxix", email = "aminoxix@duck.com" }]
+keywords = ["api", "schema", "drift", "shape", "contract-testing", "monitoring"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Testing",
+  "Typing :: Typed",
+]
+# Zero runtime dependencies — same philosophy as the TypeScript core.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/aminoxix/schemind"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/schemind"]

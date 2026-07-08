@@ -15,7 +15,15 @@
 import { type ObserveResult, createSchemind, createSchemindFetch } from '@aminoxix/schemind'
 
 /** Shared engine — passed to both schemindFetch and the TanStack hooks. */
-export const engine = createSchemind()
+export const engine = createSchemind({
+  // The demo backends run the schemind-go / schemind-py adapters and stamp
+  // X-Schemind-Schema-Hash per drift mode, so trust it: within a mode the
+  // matching hash lets the engine skip extraction entirely (the fast-path);
+  // flipping the mode changes the hash → full re-extract catches the drift.
+  // Only enable this against backends you control — the header is
+  // attacker-controllable on untrusted APIs.
+  trustAdapterHash: true,
+})
 
 /** Which integration produced an observation — drives the DriftPanel badge. */
 export type ObserveSource = 'fetch' | 'tanstack'
