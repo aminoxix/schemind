@@ -62,3 +62,22 @@ jobs:
       - name: Build Go example backend
         working-directory: examples/backend-go
         run: go build ./...
+
+  java-adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+
+      - name: Build & install schemind-java adapter
+        working-directory: adapters/schemind-java
+        run: mvn -q install
+
+      - name: Build & test Java example backend
+        working-directory: examples/backend-java
+        run: mvn -q test
