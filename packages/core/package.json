@@ -1,11 +1,11 @@
 {
   "name": "@aminoxix/schemind",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Language-agnostic API response shape intelligence — detects when your API's shape silently changes.",
   "type": "module",
   "license": "MIT",
   "author": "Anshumaan Kumar Prasad (aminos) <aminoxix@duck.com>",
-  "homepage": "https://aminoxix.me",
+  "homepage": "https://dev.iflyrich.space",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aminoxix/schemind.git",
