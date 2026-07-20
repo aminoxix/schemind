@@ -34,6 +34,13 @@ class SchemindAdapterTest {
             List<String> tags, double rating,
             Optional<String> publishedAt, String createdAt, String genre) {}
 
+    private static java.lang.reflect.RecordComponent componentOf(Class<?> recordClass, String name) {
+    return java.util.Arrays.stream(recordClass.getRecordComponents())
+            .filter(c -> c.getName().equals(name))
+            .findFirst()
+            .orElseThrow(() -> new java.util.NoSuchElementException("No component named " + name));
+}
+
     // ── Canonical string ──────────────────────────────────────────────────────
 
     @Test
@@ -119,14 +126,14 @@ class SchemindAdapterTest {
     @Test
     void canonicalOf_optionalString_isNullable() throws Exception {
         // Resolve Optional<String> from the record component's generic type.
-        var rc    = BookNone.class.getRecordComponent("publishedAt");
+        var rc    = componentOf(BookNone.class, "publishedAt");
         var canon = SchemindAdapter.canonicalOf(rc.getGenericType(), new java.util.HashSet<>());
         assertEquals("(null|string)", canon);
     }
 
     @Test
     void canonicalOf_listOfString() throws Exception {
-        var rc    = BookNone.class.getRecordComponent("tags");
+        var rc    = componentOf(BookNone.class, "tags");
         var canon = SchemindAdapter.canonicalOf(rc.getGenericType(), new java.util.HashSet<>());
         assertEquals("[string]", canon);
     }
