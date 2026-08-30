@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "astralink-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/aminos/Downloads/vsc/nextech/astralink/astralink-connect-msp-dashboard && npx --yes pnpm@9 run dev"
+      ],
+      "port": 3000,
+      "url": "http://nextech-blr.app.localhost:3000"
+    }
+  ]
+}
