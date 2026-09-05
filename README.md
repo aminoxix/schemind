@@ -1,63 +1,95 @@
+<div align="center">
+
+<img src="./assets/logo.svg" alt="schemind logo" width="120" />
+
 # schemind
 
-> your API's shape has a mind of its own. schemind watches it.
+**your API's shape has a mind of its own. schemind watches it.**
 
-[![npm](https://img.shields.io/npm/v/%40aminoxix%2Fschemind?color=18181b&label=npm)](https://www.npmjs.com/package/@aminoxix/schemind)
-[![license](https://img.shields.io/npm/l/%40aminoxix%2Fschemind?color=18181b)](./LICENSE)
-[![node](https://img.shields.io/node/v/%40aminoxix%2Fschemind?color=18181b)](https://nodejs.org)
+[![npm](https://img.shields.io/npm/v/%40aminoxix%2Fschemind?color=1818ab&label=npm)](https://www.npmjs.com/package/@aminoxix/schemind)
+[![license](https://img.shields.io/npm/l/%40aminoxix%2Fschemind?color=1818ab)](https://github.com/aminoxix/schemind/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/%40aminoxix%2Fschemind?color=1818ab)](https://nodejs.org)
+[![zero deps](https://img.shields.io/badge/dependencies-zero-1818ab)](https://www.npmjs.com/package/@aminoxix/schemind)
 
-schemind learns what your APIs *actually return* at runtime — no spec to write, no types to maintain — and tells you the moment a response shape silently changes.
+[Quickstart](#quickstart) · [How it works](#how-it-works) · [Integrations](#integrations) · [CI gate](#ci-gate) · [Backend adapters](#backend-adapters)
+
+</div>
+
+---
+
+## The problem
+
+Your frontend calls `/api/users/:id` and trusts the shape of what comes back. Then, one day, a backend team renames `author` to `authorInfo`, or a field quietly becomes nullable — and nothing tells you until a user hits a blank screen in production.
+
+No OpenAPI spec catches this if it's out of date. No TypeScript type catches this if the backend and frontend are different teams, different languages, or different repos entirely.
+
+**schemind watches the actual shape of your API responses at runtime and tells you the moment it changes — no spec to write, no types to maintain.**
+
+---
+
+## Quickstart
+
+```bash
+npm install @aminoxix/schemind
+# or
+pnpm add @aminoxix/schemind
+```
+
+Drop it into your existing `fetch` calls — no rewrite required:
 
 ```ts
 import { createSchemindFetch } from "@aminoxix/schemind";
 
 const fetch = createSchemindFetch({
   onObserve: ({ endpoint, report }) => {
-    if (report?.severity === "breaking") console.error("API drift!", endpoint, report);
+    if (report?.severity === "breaking") {
+      console.error("API drift detected!", endpoint, report);
+    }
   },
 });
 
-// drop-in. every existing fetch call is observed automatically.
+// every call through this fetch is now observed automatically
 const res = await fetch("/api/users/42");
 ```
 
----
-
-## install
-
-```bash
-npm install @aminoxix/schemind
-# pnpm add @aminoxix/schemind
-```
-
-**requires** Node.js `≥ 18` · zero runtime dependencies · works in browser, edge, and Node
+**Requires** Node.js `≥ 18` · zero runtime dependencies · works in browser, edge, and Node.
 
 ---
 
-## how it works
+## How it works
 
-@aminoxix/schemind intercepts your API calls, extracts the structural shape of each JSON response (types and nesting — never the actual values), and compares it against a stored baseline. when the shape drifts, it tells you immediately with a precise path and severity.
+schemind intercepts your API calls, extracts the *structural shape* of each JSON response (field names, types, nesting — **never** the actual values), and compares it to a stored baseline. When the shape drifts, you get a precise path and severity.
 
 ```
-GET /api/users/:id  →  shape extracted  →  compare to baseline
-                                                    ↓
-                              field_removed    →  breaking 🔴
-                              became_nullable  →  warn     🟡
-                              field_added      →  info     🔵
+GET /api/users/:id  →  shape extracted  →  compared to baseline
+                                                     │
+                              field_removed     →  🔴 breaking
+                              became_nullable   →  🟡 warn
+                              field_added       →  🔵 info
 ```
 
-the baseline is created automatically on first sight. subsequent calls diff against it.
+The baseline is created automatically on first sight — subsequent calls diff against it. No schema to hand-write, ever.
+
+| Change | Severity |
+|---|---|
+| `field_removed` | 🔴 breaking |
+| `type_changed` | 🔴 breaking |
+| `array_item_changed` | 🔴 breaking |
+| `became_nullable` | 🟡 warn |
+| `became_required` | 🟡 warn |
+| `field_added` | 🔵 info |
 
 ---
 
-## use it
+## Integrations
 
-### as a fetch wrapper
+schemind ships first-class adapters for whatever you're already using — pick one, no other code changes needed.
 
-the fastest integration — one import, your existing calls work unchanged.
+<table>
+<tr><td width="50%" valign="top">
 
+**Fetch wrapper** — the fastest way in
 ```ts
-// lib/fetch.ts
 import { createSchemindFetch } from "@aminoxix/schemind";
 
 export const fetch = createSchemindFetch({
@@ -65,23 +97,25 @@ export const fetch = createSchemindFetch({
     if (!report || report.changes.length === 0) return;
     console.warn(`[drift] ${endpoint}`, report);
   },
-  onError: (err) => console.error("[schemind]", err),
 });
 ```
 
-### as Express middleware
+</td><td width="50%" valign="top">
 
+**Express middleware**
 ```ts
 import { schemindExpress } from "@aminoxix/schemind/express";
 
-app.use(express.json());  // must come first
-app.use(schemindExpress({ onObserve: (r) => r.report && console.log(r.report) }));
+app.use(express.json()); // must come first
+app.use(schemindExpress({
+  onObserve: (r) => r.report && console.log(r.report),
+}));
 ```
 
-tracks both response shapes and request body shapes automatically.
+</td></tr>
+<tr><td width="50%" valign="top">
 
-### as a Next.js route wrapper
-
+**Next.js route wrapper**
 ```ts
 import { withSchemind } from "@aminoxix/schemind/next";
 
@@ -90,36 +124,37 @@ export const GET = withSchemind(async (req) => {
 });
 ```
 
-### as a Hono middleware
+</td><td width="50%" valign="top">
 
+**Hono middleware**
 ```ts
 import { schemindHono } from "@aminoxix/schemind/hono";
 
 app.use("*", schemindHono());
 ```
 
----
+</td></tr>
+</table>
 
-## persist baselines across runs
-
-by default baselines live in memory (gone on restart). to persist them:
+**TanStack Query** gets its own zero-touch integration — wrap your `QueryClient` once and every `useQuery` / `useMutation` in the app is observed automatically:
 
 ```ts
-import { createSchemind, SnapshotStore } from "@aminoxix/schemind";
-import { LocalStorageDriver } from "@aminoxix/schemind/node";
+import { createSchemindQueryClient } from "@aminoxix/schemind/tanstack";
 
-const engine = createSchemind({
-  store: new SnapshotStore(new LocalStorageDriver(".schemind/snapshots")),
+const queryClient = createSchemindQueryClient({
+  onObserve: ({ endpoint, report }) => {
+    if (report?.severity === "breaking") console.error("drift!", endpoint, report);
+  },
 });
 ```
 
-commit `.schemind/snapshots/` to git so CI has a baseline to diff against.
+Per-query hooks (`useSchemindQuery`, `useSchemindMutation`) and a low-level `wrapQueryFn` are also available for finer control — see the [full docs](https://github.com/aminoxix/schemind#tanstack-query-integration).
 
 ---
 
-## CI gate
+## CI gate — catch drift before it ships
 
-the `schm` CLI probes your API, compares shapes to the committed baseline, and exits 1 on breaking drift — a contract test with no spec to maintain.
+The `schm` CLI probes your API, diffs shapes against a committed baseline, and fails the build on breaking drift. It's a contract test that needs no spec to maintain.
 
 ```bash
 # scaffold config + routes file (run once)
@@ -128,8 +163,6 @@ npx schm init
 # run the gate
 npx schm ci --base-url https://staging.api.com --routes ./routes.json
 ```
-
-`routes.json`:
 
 ```json
 [
@@ -152,25 +185,51 @@ npx schm ci --base-url https://staging.api.com --routes ./routes.json
 
 ---
 
-## drift severity
+## Persist baselines across runs
 
-| change | severity |
-|---|---|
-| `field_removed` | 🔴 breaking |
-| `type_changed` | 🔴 breaking |
-| `array_item_changed` | 🔴 breaking |
-| `became_nullable` | 🟡 warn |
-| `became_required` | 🟡 warn |
-| `field_added` | 🔵 info |
+By default baselines live in memory and vanish on restart. Persist them so CI has something real to diff against:
+
+```ts
+import { createSchemind, SnapshotStore } from "@aminoxix/schemind";
+import { LocalStorageDriver } from "@aminoxix/schemind/node";
+
+const engine = createSchemind({
+  store: new SnapshotStore(new LocalStorageDriver(".schemind/snapshots")),
+});
+```
+
+Commit `.schemind/snapshots/` to git so CI always has a baseline.
+
+| Driver | Import | Use case |
+|---|---|---|
+| `MemoryStorageDriver` *(default)* | `@aminoxix/schemind` | tests, browser |
+| `LocalStorageDriver` | `@aminoxix/schemind/node` | local dev, CI with git-committed snapshots |
+| `RedisStorageDriver` | `@aminoxix/schemind/node` | shared baseline across instances |
+| `S3StorageDriver` | `@aminoxix/schemind/node` | durable shared baseline in CI |
+
+Redis and S3 are bring-your-own-client — schemind stays dependency-free.
 
 ---
 
-## notifications
+## Reduce noise
 
-wire reporters in `schemind.config.mjs`:
+Ignore volatile fields (`updatedAt`, `requestId`, etc.) that change on every request but aren't real drift:
 
 ```ts
-import { defineConfig, slackReporter, githubReporter, webhookReporter } from "@aminoxix/schemind";
+export default defineConfig({
+  ignoreFields: ["updatedAt", "createdAt", "requestId"],
+  ignorePaths: ["**.timestamp", "data[].traceId"],
+});
+```
+
+---
+
+## Notifications
+
+Wire reporters straight into `schemind.config.mjs` — Slack, GitHub PR comments, generic webhooks (HMAC-signable), PagerDuty, and OpenTelemetry are all built in.
+
+```ts
+import { defineConfig, slackReporter, githubReporter } from "@aminoxix/schemind";
 
 export default defineConfig({
   baseUrl: "https://staging.api.com",
@@ -190,35 +249,20 @@ export default defineConfig({
 });
 ```
 
-also available: `webhookReporter` (HMAC-signable), `pagerDutyReporter`, `otelReporter`.
-
 ---
 
-## reduce noise
+## Generate types & mocks from what you've observed
 
-ignore volatile fields (`updatedAt`, `requestId`, etc.) that change every response but don't represent shape drift:
-
-```ts
-export default defineConfig({
-  ignoreFields: ["updatedAt", "createdAt", "requestId"],
-  ignorePaths:  ["**.timestamp", "data[].traceId"],
-});
-```
-
----
-
-## generate types and mocks from observed shapes
-
-once schemind has learned your API shapes, export them as artifacts:
+Once schemind has learned your API's real shapes, export them as usable artifacts — no manual spec-writing:
 
 ```bash
-schm codegen --target ts          --out src/api-types.ts   # TypeScript interfaces
-schm codegen --target openapi     --out openapi.json       # OpenAPI 3.0 spec
-schm codegen --target json-schema                          # JSON Schema (stdout)
-schm codegen --target msw         --out src/mocks.ts       # MSW request handlers
+schm codegen --target ts      --out src/api-types.ts   # TypeScript interfaces
+schm codegen --target openapi --out openapi.json       # OpenAPI 3.0 spec
+schm codegen --target json-schema                       # JSON Schema (stdout)
+schm codegen --target msw     --out src/mocks.ts        # MSW request handlers
 ```
 
-seed baselines from an existing spec so you don't start cold:
+Already have a spec? Seed baselines from it instead of starting cold:
 
 ```bash
 schm seed --from openapi.json
@@ -226,118 +270,43 @@ schm seed --from openapi.json
 
 ---
 
-## local dashboard
-
-inspect endpoint health scores, run scans, and accept drift with one click:
+## Local dashboard
 
 ```bash
 schm dashboard
 # → http://127.0.0.1:4500
 ```
 
----
-
-## TanStack Query integration
-
-schemind watches every query and mutation automatically — no per-query changes needed.
-
-### auto-observe all queries (recommended)
-
-```ts
-import { createSchemindQueryClient } from "@aminoxix/schemind/tanstack";
-
-const queryClient = createSchemindQueryClient({
-  onObserve: ({ endpoint, report }) => {
-    if (report?.severity === "breaking") console.error("drift!", endpoint, report);
-  },
-});
-
-// wrap your app as usual
-<QueryClientProvider client={queryClient}>...</QueryClientProvider>
-```
-
-every `useQuery` and `useMutation` in your app is observed — zero other changes.
-
-### per-query hooks
-
-```ts
-import { useSchemindQuery, useSchemindMutation, createSchemind } from "@aminoxix/schemind/tanstack";
-
-const engine = createSchemind();
-
-// drop-in for useQuery
-const { data } = useSchemindQuery({
-  queryKey: ["books"],
-  queryFn: () => fetch("/api/books").then((r) => r.json()),
-  endpoint: "GET /api/books",
-  engine,
-});
-
-// drop-in for useMutation — observes both request and response shape
-const createBook = useSchemindMutation({
-  endpoint: "POST /api/books",
-  engine,
-  method: "POST",
-  mutationFn: (book: BookInput) =>
-    fetch("/api/books", { method: "POST", body: JSON.stringify(book) }).then((r) => r.json()),
-});
-```
-
-### low-level wrapper
-
-```ts
-import { wrapQueryFn } from "@aminoxix/schemind/tanstack";
-
-const { data } = useQuery({
-  queryKey: ["books"],
-  queryFn: wrapQueryFn("GET /api/books", fetchBooks, { engine }),
-});
-```
-
-### options & endpoint keys
-
-Every entry point accepts `onObserve` and `onError` callbacks, plus an optional
-`statusCode` (default `200`) for the observation record. Prefer passing an
-explicit `endpoint` (`"VERB /path"`): without it the endpoint is derived
-best-effort from the query/mutation key, which can't always recover a clean
-route and drops object key segments. The per-query hooks no-op (with a dev-mode
-warning) when `engine` is omitted.
-
-requires `@tanstack/react-query >= 5`.
+Inspect endpoint health scores, trigger scans, and accept drift with one click.
 
 ---
 
-## other storage options
+## Backend adapters
 
-| driver | import | use case |
+Install a satellite adapter on your backend to unlock the hash fast-path — schemind skips shape extraction entirely when the response struct hasn't changed.
+
+| Backend | Package | Status |
 |---|---|---|
-| `MemoryStorageDriver` *(default)* | `@aminoxix/schemind` | tests, browser |
-| `LocalStorageDriver` | `@aminoxix/schemind/node` | local dev, CI with git-committed snapshots |
-| `RedisStorageDriver` | `@aminoxix/schemind/node` | shared baseline across multiple instances |
-| `S3StorageDriver` | `@aminoxix/schemind/node` | durable shared baseline in CI |
-
-Redis and S3 are bring-your-own-client — schemind stays dependency-free.
-
----
-
-## backend adapters (optional)
-
-install a satellite on your backend to unlock the hash fast-path — schemind skips shape extraction entirely when the response struct hasn't changed.
-
-| backend | package | status |
-|---|---|---|
-| Go (net/http) | `schemind-go` | ✅ available |
+| Go (`net/http`) | `schemind-go` | ✅ available |
 | Java / Spring Boot | `schemind-java` | ✅ available |
 | Python (FastAPI / Django) | `schemind-py` | ✅ available |
 
 ---
 
-## contributing
+## Why schemind?
 
-see [CONTRIBUTING.md](./CONTRIBUTING.md).
+- **No spec to maintain.** Baselines are learned at runtime, not hand-written and left to rot.
+- **Language-agnostic core.** The same drift model (`none` / `breaking` / `warn` / `info`) works whether your backend is TypeScript, Go, Java, or Python.
+- **Zero runtime dependencies.** Ships lean, works anywhere JavaScript runs — browser, edge, Node.
+- **Drop-in, not a rewrite.** Wrap your existing `fetch`, add a middleware line, or wrap a query client — that's the whole integration.
+- **CI-native.** Fails builds on real breaking changes, not on cosmetic diffs, with configurable severity thresholds.
 
 ---
 
-## license
+## Contributing
 
-[MIT](./LICENSE) · built by [aminos](https://aminoxix.me)
+Contributions are very welcome — see [CONTRIBUTING.md](https://github.com/aminoxix/schemind/blob/main/CONTRIBUTING.md) to get started. Good first areas: new backend adapters, additional reporters, and codegen targets.
+
+## License
+
+[MIT](https://github.com/aminoxix/schemind/blob/main/LICENSE) · built by [aminos](https://dev.iflyrich.space)

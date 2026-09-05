@@ -283,4 +283,4 @@ by contributing, you agree your changes are released under the [MIT license](./L
 
 ### built with ♡ by
 
-> **profile** [@aminoxix](https://aminoxix.me) · **x** [@aminoxix](https://twitter.com/aminoxix)
+> **profile** [@aminoxix](https://dev.iflyrich.space) · **x** [@aminoxix](https://twitter.com/aminoxix)
